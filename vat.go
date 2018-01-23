@@ -3,24 +3,61 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 
 	_ "github.com/lib/pq"
 )
 
 var db *sql.DB
 var err error
+var args map[string]string
 
 func main() {
-	connStr := "user=postgres dbname=vat password=password sslmode=disable"
+	extractArgs()
+	setupConnection()
+	setupServer()
+	updateRates()
+}
+
+func extractArgs() {
+	args = make(map[string]string)
+	plainArgs := os.Args[1:]
+	for _, el := range plainArgs {
+		strs := strings.Split(el, "=")
+		param, value := strs[0], strs[1]
+		args[param] = value
+	}
+}
+
+func argOrDefault(name string, def string) string {
+	val, ok := args[name]
+	if ok {
+		return val
+	} else {
+		return def
+	}
+}
+
+func setupConnection() {
+	user := argOrDefault("user", "postgres")
+	database := argOrDefault("database", "")
+	password := argOrDefault("password", "")
+	connStr := fmt.Sprintf("user=%s dbname=%s password=%s sslmode=disable", user, database, password)
 	db, err = sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)
 	}
-	updateRates()
+}
+
+func setupServer() {
 	http.HandleFunc("/", handler)
-	log.Fatal(http.ListenAndServe("localhost:8001", nil))
+	port := argOrDefault("port", "8001")
+	serverString := fmt.Sprintf("localhost:%s", port)
+	log.Fatal(http.ListenAndServe(serverString, nil))
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
