@@ -19,8 +19,8 @@ var args map[string]string
 func main() {
 	extractArgs()
 	setupConnection()
+	go updateRates()
 	setupServer()
-	updateRates()
 }
 
 func extractArgs() {
@@ -92,5 +92,4 @@ func renderResponse(rates []ExchangeRate, w http.ResponseWriter) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
-
 }

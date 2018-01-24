@@ -53,11 +53,11 @@ func updateRates() {
 					log.Fatal(err)
 				}
 				db.Exec(`UPDATE exchange_rates SET buy = $1, sell = $2, set_at = $3, updated_at = $4 WHERE id = $5;`, buy, sell, set_at, cur_time, id)
-				fmt.Println("Bank exist")
+				fmt.Printf("Bank exist: %s\n", bank)
 				found = true
 			}
 			if !found {
-				fmt.Println("Creating bank")
+				fmt.Printf("Creating bank: %s\n", bank)
 
 				_, err := db.Exec(`INSERT INTO exchange_rates (bank, buy, sell, set_at, created_at, updated_at)  VALUES ($1, $2, $3, $4, $5, $5);`, bank, buy, sell, set_at, cur_time)
 				if err != nil {
