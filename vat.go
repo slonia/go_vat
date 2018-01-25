@@ -60,7 +60,6 @@ func setupServer() {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	go updateRates()
 	rates := extractData()
 	renderResponse(rates, w)
 }

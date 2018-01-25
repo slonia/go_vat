@@ -1,10 +1,15 @@
 package main
 
 import (
+	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
+	_ "github.com/lib/pq"
 	"github.com/yhat/scrape"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
@@ -13,10 +18,48 @@ import (
 
 const base = "http://kantory.pl/kursy/usd/"
 
-func logFatal(error err) {
+func logFatal(err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+var db *sql.DB
+var err error
+var args map[string]string
+
+func main() {
+	extractArgs()
+	setupConnection()
+	updateRates()
+}
+
+func extractArgs() {
+	args = make(map[string]string)
+	plainArgs := os.Args[1:]
+	for _, el := range plainArgs {
+		strs := strings.Split(el, "=")
+		param, value := strs[0], strs[1]
+		args[param] = value
+	}
+}
+
+func argOrDefault(name string, def string) string {
+	val, ok := args[name]
+	if ok {
+		return val
+	} else {
+		return def
+	}
+}
+
+func setupConnection() {
+	user := argOrDefault("user", "postgres")
+	database := argOrDefault("database", "")
+	password := argOrDefault("password", "")
+	connStr := fmt.Sprintf("user=%s dbname=%s password=%s sslmode=disable", user, database, password)
+	db, err = sql.Open("postgres", connStr)
+	logFatal(err)
 }
 
 func updateRates() {
