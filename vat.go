@@ -19,7 +19,6 @@ var args map[string]string
 func main() {
 	extractArgs()
 	setupConnection()
-	go updateRates()
 	setupServer()
 }
 
@@ -61,6 +60,7 @@ func setupServer() {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
+	go updateRates()
 	rates := extractData()
 	renderResponse(rates, w)
 }
